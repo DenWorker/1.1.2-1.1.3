@@ -21,7 +21,7 @@ public class UserDaoJDBCImpl implements UserDao {
                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         name VARCHAR(100) NOT NULL,
                         lastName VARCHAR(100) NOT NULL,
-                        age INT CHECK (age > 0 AND age < 150)
+                        age TINYINT
                     );
                     """);
         } catch (SQLException | ClassNotFoundException e) {
