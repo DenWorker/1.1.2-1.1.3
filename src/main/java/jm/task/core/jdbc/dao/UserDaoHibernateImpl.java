@@ -4,6 +4,7 @@ import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +19,10 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void createUsersTable() {
+        Transaction transaction = null;
         try (SessionFactory sessionFactory = Util.createSessionFactoryHibernate();
              Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
+            transaction = session.beginTransaction();
 
             session.createSQLQuery("""
                     CREATE TABLE IF NOT EXISTS users (
@@ -31,52 +33,66 @@ public class UserDaoHibernateImpl implements UserDao {
                     );
                     """).executeUpdate();
 
-            session.getTransaction().commit();
+            transaction.commit();
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             Logger.getLogger(UserDaoHibernateImpl.class.getName()).log(Level.SEVERE, "An error occurred", e);
         }
     }
 
     @Override
     public void dropUsersTable() {
+        Transaction transaction = null;
         try (SessionFactory sessionFactory = Util.createSessionFactoryHibernate();
              Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
+            transaction = session.beginTransaction();
 
             session.createSQLQuery("DROP TABLE IF EXISTS users").executeUpdate();
 
-            session.getTransaction().commit();
+            transaction.commit();
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             Logger.getLogger(UserDaoHibernateImpl.class.getName()).log(Level.SEVERE, "An error occurred", e);
         }
     }
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
+        Transaction transaction = null;
         try (SessionFactory sessionFactory = Util.createSessionFactoryHibernate();
              Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
+            transaction = session.beginTransaction();
 
             session.save(new User(name, lastName, age));
 
-            session.getTransaction().commit();
+            transaction.commit();
             Logger.getLogger(UserDaoHibernateImpl.class.getName()).info(String.format("User с именем – %s %s добавлен в базу данных ", name, lastName));
-
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             Logger.getLogger(UserDaoHibernateImpl.class.getName()).log(Level.SEVERE, "An error occurred", e);
         }
     }
 
     @Override
     public void removeUserById(long id) {
+        Transaction transaction = null;
         try (SessionFactory sessionFactory = Util.createSessionFactoryHibernate();
              Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
+            transaction = session.beginTransaction();
 
             session.delete(session.get(User.class, id));
 
-            session.getTransaction().commit();
+            transaction.commit();
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             Logger.getLogger(UserDaoHibernateImpl.class.getName()).log(Level.SEVERE, "An error occurred", e);
         }
     }
@@ -86,11 +102,9 @@ public class UserDaoHibernateImpl implements UserDao {
         List<User> userList = new ArrayList<>();
         try (SessionFactory sessionFactory = Util.createSessionFactoryHibernate();
              Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
 
             userList = session.createQuery("FROM User", User.class).getResultList();
 
-            session.getTransaction().commit();
         } catch (Exception e) {
             Logger.getLogger(UserDaoHibernateImpl.class.getName()).log(Level.SEVERE, "An error occurred", e);
         }
@@ -99,14 +113,18 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
+        Transaction transaction = null;
         try (SessionFactory sessionFactory = Util.createSessionFactoryHibernate();
              Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
+            transaction = session.beginTransaction();
 
             session.createQuery("DELETE FROM User").executeUpdate();
 
-            session.getTransaction().commit();
+            transaction.commit();
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             Logger.getLogger(UserDaoHibernateImpl.class.getName()).log(Level.SEVERE, "An error occurred", e);
         }
     }
